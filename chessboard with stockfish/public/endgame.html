@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Endgame Chess</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #333;
+      color: white;
+    }
+    #container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #444;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+    }
+    #pieceContainerTop, #pieceContainerBottom {
+      display: flex;
+      justify-content: center;
+      margin: 10px 0;
+    }
+    .draggable-piece {
+      cursor: pointer;
+      width: 45px;
+      height: 45px;
+    }
+    #fenInput, #fenDisplay {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <h1>Syzygy endgame tablebases</h1>
+    <div id="pieceContainerTop">
+      <img src="public\img\chesspieces\wikipedia\bP.png" class="draggable-piece" id="bP" />
+      <img src="public\img\chesspieces\wikipedia\bN.png" class="draggable-piece" id="bN" />
+      <img src="public\img\chesspieces\wikipedia\bB.png" class="draggable-piece" id="bB" />
+      <img src="public\img\chesspieces\wikipedia\bR.png" class="draggable-piece" id="bR" />
+      <img src="public\img\chesspieces\wikipedia\bQ.png" class="draggable-piece" id="bQ" />
+      <img src="public\img\chesspieces\wikipedia\bK.png" class="draggable-piece" id="bK" />
+    </div>
+    <div id="myBoard" style="width: 400px"></div>
+    <div id="pieceContainerBottom">
+      <img src="public\img\chesspieces\wikipedia\wP.png" class="draggable-piece" id="wP" />
+      <img src="public\img\chesspieces\wikipedia\wN.png" class="draggable-piece" id="wN" />
+      <img src="public\img\chesspieces\wikipedia\wB.png" class="draggable-piece" id="wB" />
+      <img src="public\img\chesspieces\wikipedia\wR.png" class="draggable-piece" id="wR" />
+      <img src="public\img\chesspieces\wikipedia\wQ.png" class="draggable-piece" id="wQ" />
+      <img src="public\img\chesspieces\wikipedia\wK.png" class="draggable-piece" id="wK" />
+    </div>
+    <div>
+      <input type="text" id="fenInput" placeholder="Paste FEN string here">
+      <button id="setFenBtn">Set FEN</button>
+    </div>
+    <div>
+      <input type="text" id="fenDisplay" readonly>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.2/chess.js"></script>
+  <script>
+    var board = null;
+    var game = new Chess();
+    var initialFen = '8/8/8/8/8/8/8/K6k w - - 0 1';
+
+    function initializeBoard() {
+      game.load(initialFen);
+      board.position(initialFen);
+      document.getElementById('fenDisplay').value = initialFen;
+    }
+    $('#learnEndgamesBtn').on('click', function() {
+        game.reset();
+        board.start();
+        moveHistory = [];
+        displayFEN();
+        updateButtons();
+      });
+  
+    function onDragStart(source, piece, position, orientation) {
+      // Only allow legal moves
+      if (game.in_checkmate() || game.in_draw()) return false;
+      if (piece.search(/^b/) !== -1 && game.turn() === 'w') return false;
+      if (piece.search(/^w/) !== -1 && game.turn() === 'b') return false;
+    }
+
+    function onDrop(source, target) {
+      var move = game.move({
+        from: source,
+        to: target,
+        promotion: 'q' // Automatically promote to a queen for simplicity
+      });
+
+      if (move === null) return 'snapback';
+
+      updateFen();
+    }
+
+    function onSnapEnd() {
+      board.position(game.fen());
+    }
+
+    function updateFen() {
+      var fen = game.fen();
+      document.getElementById('fenDisplay').value = fen;
+    }
+
+    function setFen() {
+      var fen = document.getElementById('fenInput').value;
+      if (game.validate_fen(fen).valid) {
+        game.load(fen);
+        board.position(fen);
+        updateFen();
+      } else {
+        alert('Invalid FEN');
+      }
+    }
+
+    function resetBoard() {
+      initializeBoard();
+    }
+
+    var config = {
+      draggable: true,
+      position: 'start',
+      onDragStart: onDragStart,
+      onDrop: onDrop,
+      onSnapEnd: onSnapEnd
+    };
+
+    board = Chessboard('myBoard', config);
+
+    $(document).ready(function() {
+      initializeBoard();
+      $('#setFenBtn').on('click', setFen);
+      $('#resetBtn').on('click', resetBoard);
+
+      // Draggable pieces
+      $('.draggable-piece').on('dragstart', function(e) {
+        e.originalEvent.dataTransfer.setData('text/plain', e.target.id);
+      });
+
+      $('#myBoard').on('dragover', function(e) {
+        e.preventDefault();
+      });
+
+      $('#myBoard').on('drop', function(e) {
+        e.preventDefault();
+        var pieceId = e.originalEvent.dataTransfer.getData('text/plain');
+        var square = $(e.target).attr('data-square');
+
+        var piece = pieceId.slice(0, 2);
+        game.put({ type: piece.charAt(1).toLowerCase(), color: piece.charAt(0) }, square);
+        board.position(game.fen());
+        updateFen();
+      });
+    });
+  </script>
+</body>
+</html>

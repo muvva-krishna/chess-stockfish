@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Chess Tutor</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="container">
+      <h1>Welcome to the AI powered Chess Tutor</h1>
+      <p>Improve your chess skills with our AI-powered tutor.</p>
+      <label for="levelSelect">Choose a difficulty level:</label>
+      <select id="levelSelect">
+        <option value="0">0 - Beginner</option>
+        <option value="1">1 - Novice</option>
+        <option value="2">2 - Intermediate</option>
+        <option value="3">3 - Advanced</option>
+        <option value="4">4 - Expert</option>
+        <option value="5">5 - Master</option>
+        <option value="6">6 - Grandmaster</option>
+        <option value="7">7 - Professional</option>
+        <option value="8">8 - Elite</option>
+        <option value="9">9 - Legendary</option>
+        <option value="10">10 - Ultimate</option>
+      </select>
+      <button id="startBtn">Start Game</button>
+      <div class="button-container learn-endgames">
+      <button id="learnEndgamesBtn">Learn Endgames</button>
+    </div>
+    <div class="button-container solve-puzzles">
+      <button id="solvepuzzlesBtn">Solve Puzzles</button>
+    </div>
+
+
+    <script>
+      document.getElementById('startBtn').addEventListener('click', function() {
+        var level = document.getElementById('levelSelect').value;
+        if (level !== null && level !== "") {
+          window.location.href = `game.html?level=${level}`;
+        } else {
+          alert('Please select a level to start the game.');
+        }
+      });
+
+      document.getElementById('learnEndgamesBtn').addEventListener('click', function() {
+        window.location.href = 'endgame.html';
+
+      });
+      
+      document.getElementById('solvepuzzlesBtn').addEventListener('click', function() {
+        window.location.href = 'solvepuzzles.html';
+      });
+    </script>
+  </body>
+</html>
